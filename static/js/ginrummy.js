@@ -88,15 +88,18 @@ module.exports = class {
 				self.phase(data[0]);
 			if(type === "n")
 				self.n(data[0]);
-			if(type === "initCard" && self.n() === 1)
-				self.oHand.push(new Card(data[0]));
-			if(type === "discard") {
+			if(type === "initCard") {
+				if(self.n() === 1)
+					self.oHand.push(new Card(data[0]));
+				Card.find(data[0]).public = true;
+			} if(type === "discard") {
 				if(self.phase() === (self.n() + 1) % 2 + .5)
 					self.oHand.remove((
 						self.oHand().find(c => c.identity === data[0]) ||
 						self.oHand().find(c => c.identity === "?")
 					).reveal(data[0]));
 				self.discard(Card.find(data[0]));
+				self.discard().public = true;
 			}
 			if(type === "drew") {
 				setTimeout(() => {
@@ -188,6 +191,7 @@ module.exports = class {
 					.addClass("_card hide")
 					.attr("data-card", this.identity)
 					.offset($(".deck").offset())
+					.append($("<div>").text("👁"))
 					.appendTo(".ginrummy")
 				;
 			}
@@ -201,6 +205,8 @@ module.exports = class {
 
 				this.$tracker
 					.attr("data-card", this.identity)
+					.toggleClass("inHand", !!this.$trackee && !!this.$trackee.parents(".hand").length)
+					.toggleClass("public", !!this.public)
 					.toggleClass("hide", this.identity === "?")
 					.css("opacity", hide ? 0 : "")
 
@@ -229,9 +235,10 @@ module.exports = class {
 		} }
 
 		ko.bindingHandlers.card = {
+			init: el => $(el).addClass("card"),
 			update: (el, valueAccessor) => {
 				let card = ko.unwrap(valueAccessor());
-				if(card) card.track($(el).addClass("card").attr("data-card", card.identityO()));
+				if(card) card.track($(el).attr("data-card", card.identityO()));
 			}
 		}
 

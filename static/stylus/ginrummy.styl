@@ -11,6 +11,7 @@
 	border-radius 10px
 	color black
 	margin 5px;
+	position relative
 
 	transition: all 0s ease-in-out .1s, transform .2s ease-in-out, top .2s, left .2s;
 
@@ -42,6 +43,21 @@
 
 		&:after
 			font-size 55px
+
+	& div
+		font-size 40px
+		position absolute
+		top calc(100% - 10px)
+		left 50%
+		color $white
+		transform translate(-50%, 0)
+		opacity 0
+		transition opacity .2s
+
+		.inHand.public&
+			opacity 1
+
+
 
 .card
 	opacity 0 !important
