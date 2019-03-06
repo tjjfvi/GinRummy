@@ -1,0 +1,107 @@
+
+.card
+._card
+	display inline-flex
+	align-items center
+	justify-content center
+	width 100px
+	height 100px
+	background $white
+	border 5px solid black
+	border-radius 10px
+	color black
+	margin 5px;
+
+	transition: all 0s ease-in-out .1s, transform .2s ease-in-out, top .2s, left .2s;
+
+	&:before
+		content attr(data-card)
+		font-size 55px
+		transition: font-size 0s linear .1s;
+
+	&:after
+		content "?"
+		font-size 0px
+		transform rotateY(180deg)
+		transition: font-size 0s linear .1s;
+
+
+	&[data-card$=♥]
+	&[data-card$=♦]
+		color red
+		border-color red
+
+	&[data-card="?"], &.hide
+		color $grey
+		border-color $grey
+		opacity .5
+		transform: rotateY(180deg);
+
+		&:before
+			font-size 0px
+
+		&:after
+			font-size 55px
+
+.card
+	opacity 0 !important
+
+._card
+	position absolute
+	pointer-events none
+
+.ginrummy
+	display flex
+	height: 100%;
+	width 100%
+	flex-direction column
+	align-items center
+	justify-content: space-between;
+
+	& > div
+		display flex
+		align-items center
+		justify-content center
+		flex-wrap wrap
+
+	& > .melds
+		display flex
+		flex-direction column
+		align-items center
+		color $grey
+		font-size 25px;
+
+	button
+		height 60px
+		width 200px
+		background-color $black
+		border 2.5px solid $grey
+		border-radius 15px
+		font-size 30px
+		color $lightgrey
+		cursor pointer
+		transition border-color .2s, color .2s
+
+		&:hover
+			border-color $lightgrey
+			color $white
+
+		&.willKnock
+		&.ok
+			color $green
+			border-color $green
+
+.clickable
+	cursor pointer
+
+.stats
+	align-self flex-start
+	display block !important
+	color $lightgrey
+	font-size 25px
+	margin 20px
+
+.fin
+	color #bdc3c7
+	font-size 50px
+	text-align center

@@ -1,0 +1,22 @@
+{
+  "name": "ginrummy",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "cd static/js && npm i"
+  },
+  "author": "",
+  "dependencies": {
+    "browserify": "^16.2.3",
+    "express": "^4.16.4",
+    "express-ws": "^4.0.0",
+    "stylus": "^0.54.5",
+    "watchify": "^3.11.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.1"
+  }
+}

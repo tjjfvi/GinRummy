@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title>Gin Rummy</title>
+
+		<link rel="stylesheet" href="bundle.css">
+		<script src="bundle.js"></script>
+	</head>
+	<body style="display: none;" data-bind="visible: true">
+
+		<div class="intro" data-bind="visible: status() === 'waiting', with: intro">
+			<div class="join">
+				<h1>Join an existing game</h1>
+				<!-- ko foreach: games -->
+				<div class="game" data-bind="css: { pswd: pswdReq }">
+					<span>
+						<span data-bind="text: name || '[unnamed]'">T6</span>
+					</span>
+					<div>
+						<input type="password" data-lpignore="true" placeholder="Password" data-bind="value: pswd, css: { wrong }"/>
+						<button data-bind="click: join">Join</button>
+					</div>
+				</div>
+				<!-- /ko -->
+			</div>
+
+			<div class="host" data-bind="with: host">
+				<h1>Host a new game</h1>
+				<label>
+					<span>Name</span>
+					<input type="text" data-bind="value: name"/>
+				</label>
+				<label>
+					<span>Password <i>(optional)</i></span>
+					<input type="password" data-lpignore="true" data-bind="value: pswd"/>
+				</label>
+				<button data-bind="click: host">Host</button>
+			</div>
+
+		</div>
+
+		<div class="hosting" data-bind="visible: status() === 'hosting'">
+			Waiting for someone to join...
+		</div>
+
+		<div class="ginrummy" data-bind="with: ginrummy, visible: status() === 'playing'">
+			<div class="stats">
+				Score: <span data-bind="text: oScore"></span>/100<br>
+				Deadwood: <span data-bind="text: oDeadwoodTotal"></span>
+			</div>
+			<div class="melds" data-bind="visible: phase() === -1">
+				<!-- ko foreach: oMelds -->
+					<div data-bind="foreach: $data">
+						<div class="card" data-bind="
+							attr: { 'data-card': $data },
+							css: { phantom: ~$parents[1].oHand().indexOf($data) },
+						"></div>
+					</div>
+				<!-- /ko -->
+				<div class="deadwood" data-bind="visible: oDeadwoodTotal, foreach: oDeadwood">
+					<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+				</div>
+			</div>
+			<div data-bind="foreach: oHand, visible: phase() !== -1" class="oHand">
+				<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+			</div>
+			<div data-bind="visible: phase() !== -1">
+				<div class="card deck" data-card="?" data-bind="css: { clickable: canDraw() }, click: drawDeck"></div>
+				<div class="card discard" data-bind="attr: { 'data-card': discard(), id: discard() }, css: { clickable: canDraw() }, click: drawDiscard"></div>
+			</div>
+			<div data-bind="foreach: hand, visible: phase() !== -1" class="hand">
+				<div class="card" data-bind="
+					attr: { 'data-card': $data },
+					css: {
+						clickable:
+							$parent.canDiscard() &&
+							$data !== $parent.no() &&
+							(!$parent.willKnock() || (~$parent.deadwood().indexOf($data) && $parent.value($data) >= $parent.deadwoodTotal() - 10))
+					},
+					click: () => $parent.discardCard($data),
+				"></div>
+			</div>
+			<button data-bind="visible: phase() === -1, click: sendOk, css: { ok }">Ok</button>
+			<div class="melds" data-bind="visible: phase() === -1">
+				<div class="deadwood" data-bind="visible: deadwoodTotal, foreach: deadwood">
+					<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+				</div>
+				<!-- ko foreach: melds -->
+					<div data-bind="foreach: $data">
+						<div class="card" data-bind="
+							attr: { 'data-card': $data },
+							css: { phantom: ~$parents[1].hand().indexOf($data) },
+						"></div>
+					</div>
+				<!-- /ko -->
+			</div>
+			<div style="align-self: flex-start; display: flex; align-items: center;">
+				<div class="stats">
+					Score: <span data-bind="text: score"></span>/100<br>
+					Deadwood: <span data-bind="text: deadwoodTotal"></span>
+				</div>
+				<!-- ko if: deadwoodCalc().canKnock && phase() === n() + .5 -->
+					<button data-bind="click: knock, css: { willKnock }">Knock</button>
+				<!-- /ko -->
+			</div>
+		</div>
+
+	</body>
+</html>
