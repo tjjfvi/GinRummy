@@ -52,26 +52,26 @@
 			<div class="melds" data-bind="visible: phase() === -1">
 				<!-- ko foreach: oMelds -->
 					<div data-bind="foreach: $data">
-						<div class="card" data-bind="
-							attr: { 'data-card': $data },
+						<div data-bind="
+							card: $data,
 							css: { phantom: ~$parents[1].oHand().indexOf($data) },
 						"></div>
 					</div>
 				<!-- /ko -->
 				<div class="deadwood" data-bind="visible: oDeadwoodTotal, foreach: oDeadwood">
-					<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+					<div data-bind="attr: { 'data-card': $data }"></div>
 				</div>
 			</div>
 			<div data-bind="foreach: oHand, visible: phase() !== -1" class="oHand">
-				<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+				<div data-bind="card: $data"></div>
 			</div>
 			<div data-bind="visible: phase() !== -1">
-				<div class="card deck" data-card="?" data-bind="css: { clickable: canDraw() }, click: drawDeck"></div>
-				<div class="card discard" data-bind="attr: { 'data-card': discard(), id: discard() }, css: { clickable: canDraw() }, click: drawDiscard"></div>
+				<div class="deck" data-bind="card: _deckCard, css: { clickable: canDraw() }, click: drawDeck"></div>
+				<div class="discard" data-bind="card: discard(), css: { clickable: canDraw() }, click: drawDiscard"></div>
 			</div>
 			<div data-bind="foreach: hand, visible: phase() !== -1" class="hand">
-				<div class="card" data-bind="
-					attr: { 'data-card': $data },
+				<div data-bind="
+					card: $data,
 					css: {
 						clickable:
 							$parent.canDiscard() &&
@@ -84,12 +84,12 @@
 			<button data-bind="visible: phase() === -1, click: sendOk, css: { ok }">Ok</button>
 			<div class="melds" data-bind="visible: phase() === -1">
 				<div class="deadwood" data-bind="visible: deadwoodTotal, foreach: deadwood">
-					<div class="card" data-bind="attr: { 'data-card': $data }"></div>
+					<div data-bind="card: $data"></div>
 				</div>
 				<!-- ko foreach: melds -->
 					<div data-bind="foreach: $data">
 						<div class="card" data-bind="
-							attr: { 'data-card': $data },
+							card: $data,
 							css: { phantom: ~$parents[1].hand().indexOf($data) },
 						"></div>
 					</div>

@@ -10,22 +10,29 @@ module.exports = class {
 		const self = this;
 		const ginrummy = self;
 
+		const cards = [];
+		let pauseAnimation = false;
+
+		const Card = createCard();
+
+		self._deckCard = new Card("?");
+
 		self.n = ko.observable();
-		self.oHand = ko.observableArray("?".repeat(10).split(""));
-		self.hand = ko.observableArray("?".repeat(10).split(""));
+		self.oHand = ko.observableArray();
+		self.hand = ko.observableArray();
 		self.phase = ko.observable();
-		self.discard = ko.observable("?");
+		self.discard = ko.observable();
 		self.no = ko.observable();
 		self.willKnock = ko.observable(false);
 
 		self.score = ko.observable(0);
 		self.oScore = ko.observable(0);
 
-		self.deadwoodCalc = ko.computed(() => calcDeadwood(self.hand()));
+		self.deadwoodCalc = ko.computed(() => calcDeadwood(self.hand().map(c => c.identity)));
 		self._deadwoodTotal = ko.observable();
 		self.deadwoodTotal = ko.computed(() => self._deadwoodTotal() || self.deadwoodCalc().deadwoodTotal);
 		self._deadwood = ko.observable();
-		self.deadwood = ko.computed(() => self._deadwood() || self.deadwoodCalc().deadwood);
+		self.deadwood = ko.computed(() => self.phase() === -1 && (self._deadwood() || self.deadwoodCalc().deadwood));
 
 		self.oDeadwoodTotal = ko.observable("???");
 		self.oDeadwood = ko.observable([]);
@@ -41,7 +48,7 @@ module.exports = class {
 		self.drawDeck = () => {
 			if(!self.canDraw()) return;
 			ws.s("move", "deck");
-			self.hand.push("?")
+			self.hand.push(new Card("?"));
 			self.no(null);
 		}
 
@@ -50,14 +57,14 @@ module.exports = class {
 			ws.s("move", "discard");
 			self.hand.push(self.discard());
 			self.no(self.discard());
-			self.discard("?");
+			self.discard(null);
 		}
 
 		self.discardCard = card => {
-			if(!self.canDiscard() || card === self.no()) return;
+			if(!self.canDiscard() || card.identity === "?" || card === self.no()) return;
 			self.hand.remove(card);
 			self.discard(card);
-			ws.s("move", "discard", card, self.willKnock());
+			ws.s("move", "discard", card.identity, self.willKnock());
 			self.willKnock(false);
 		}
 
@@ -76,33 +83,31 @@ module.exports = class {
 
 		root.on("ws", ({ type, data }) => {
 			if(type === "hand")
-				self.hand(data[0]);
+				self.hand(data[0].map(c => new Card(c)));
 			if(type === "phase")
 				self.phase(data[0]);
 			if(type === "n")
 				self.n(data[0]);
 			if(type === "initCard" && self.n() === 1)
-				self.oHand.push(data[0]);
+				self.oHand.push(new Card(data[0]));
 			if(type === "discard") {
-				self.discard(data[0]);
-				if(self.phase() === (self.n() + 1) % 2 + .5) {
-					let ind = self.oHand.indexOf(data[0]);
-					if(ind === -1) ind = self.oHand().lastIndexOf("?");
-					console.log(ind);
-					(cardMap[$(".oHand .card").eq(ind).attr("id")] || { change: () => {} }).change(data[0]);
-					self.oHand.splice(ind, 1);
-				}
+				if(self.phase() === (self.n() + 1) % 2 + .5)
+					self.oHand.remove((
+						self.oHand().find(c => c.identity === data[0]) ||
+						self.oHand().find(c => c.identity === "?")
+					).reveal(data[0]));
+				self.discard(Card.find(data[0]));
 			}
 			if(type === "drew") {
 				setTimeout(() => {
 					cardMap[$(".hand .card").eq(self.hand.indexOf("?")).attr("id")].change(data[0]);
-					self.hand.replace("?", data[0]);
+					self.hand.splice(-1, 1, Card.find(data[0]));
 				}, 1000);
 			} if(type === "o:deck")
-				self.oHand.unshift("?");
+				self.oHand.push(new Card("?"));
 			if(type === "o:discard") {
 				self.oHand.push(self.discard())
-				self.discard("?")
+				self.discard(null)
 			}
 
 			if(type === "end") {
@@ -119,9 +124,9 @@ module.exports = class {
 				self.oMelds(oS.melds);
 				self.oDeadwoodTotal(oS.deadwoodTotal);
 				[].concat(...oS.melds, oS.deadwood).reduce((i, c) => {
-					if(~self.oHand().indexOf(c))
+					if(~self.oHand().map(d => d.identity === c).indexOf(true))
 						return i;
-					cardMap[$(".oHand .card").eq(i).attr("id")].change(c);
+					self.oHand().filter(c => c.identity === "?")[0].change(c);
 					return ++i;
 				}, 0);
 
@@ -132,24 +137,24 @@ module.exports = class {
 			}
 
 			if(type === "start") {
-				console.log(self.oHand());
+				$("._card").addClass("old");
+				cards.map(c => c.old = true);
 				self.oMelds([]);
 				self.melds([]);
 				self._deadwood([]);
 				self._deadwoodTotal(0);
 				self.oDeadwoodTotal("???");
 				self.oDeadwood([]);
-				self.phase(-2);
-				self.oHand("?".repeat(10).split(""));
+				self.phase(-42);
+				self.oHand([...Array(10)].map(() => new Card("?")));
 				pauseAnimation = true;
 				setTimeout(() => {
-					cards.splice(0, cards.length);
-					for(let key in cardMap) delete cardMap[key];
-					$("._card").offset($(".deck").offset());
-					$(".card:not(.discard)").removeAttr("id");
+					cards.splice(0, cards.length, ...cards.filter(c => !c.old));
+					$("._card.old").offset($(".deck").offset());
 					setTimeout(() => {
-						$("._card").remove();
+						$("._card.old").remove();
 						pauseAnimation = false;
+						console.log("hi");
 						animate();
 					}, 400);
 				}, 0);
@@ -166,14 +171,9 @@ module.exports = class {
 			}
 		})
 
-		const cards = [];
-		const cardMap = {};
-		let pauseAnimation = false;
-
 		function animate(){
 			if(pauseAnimation) return;
 			cards.forEach(c => c.update());
-			$(".card:not([id])").each((_, el) => new Card($(el)))
 			window.requestAnimationFrame(animate);
 		}
 
@@ -181,17 +181,15 @@ module.exports = class {
 			return "card-" + require("crypto").randomBytes(4).toString("hex");
 		}
 
-		class Card {
-			constructor($el){
+		function createCard(){ return class Card {
+			constructor(identity){
 				cards.push(this);
-				this.card = $el.attr("data-card");
-				let id = this.id = this.card === "?" ? genId() : this.card;
-				cardMap[id] = this;
-				$el.attr("id", id);
-				this.$ = $("<div>")
+				this.identity = identity;
+				this.identityO = ko.observable(identity);
+				this.$trackee = null;
+				this.$tracker = $("<div>")
 					.addClass("_card hide")
-					.attr("id", "_" + id)
-					.attr("data-card", $el.attr("data-card"))
+					.attr("data-card", this.identity)
 					.offset($(".deck").offset())
 					.appendTo(".ginrummy")
 				;
@@ -200,27 +198,44 @@ module.exports = class {
 			update(){
 				let ease = n => (3*n**2 + 2*n**3)/5;
 
-				let $el = $(`#${this.id}${this.card === "?" ? "" : `,.card[data-card=${this.card}]`}`);
-				if(!$el.length) {
-					this.$.remove();
-					cards.splice(cards.indexOf(this), 1);
-				}
-				$el.attr("id", this.id);
+				let offset = (this.$trackee || { offset: () => {} }).offset() || { left: 0, top: 0 };
 
-				let offset = $el.offset();
+				let hide = offset.left === 0 && offset.top === 0;
 
-				if(!offset) offset = { left: 0, top: 0 };
+				this.$tracker
+					.attr("data-card", this.identity)
+					.toggleClass("hide", this.identity === "?")
+					.css("opacity", hide ? 0 : "")
 
-				this.$
-					.attr("data-card", this.card)
-					.toggleClass("hide", $el.attr("data-card") === "?")
-					.css("opacity", offset.left === 0 && offset.top === 0 ? 0 : "")
-
-				this.$.offset($el.offset());
+				if(!hide)
+					this.$tracker.offset(offset);
 			}
 
-			change(card){
-				$(`#_${this.id}`).attr("id", "_" + (this.id = this.card = card));
+			reveal(identity){
+				this.identityO(this.identity = identity);
+				return this;
+			}
+
+			hide(){
+				this.identity = "?";
+				return this;
+			}
+
+			track($el){
+				this.$trackee = $el;
+				return this;
+			}
+
+			static find(identity){
+				return cards.find(c => c.identity === identity) || new Card(identity);
+			}
+		} }
+
+		ko.bindingHandlers.card = {
+			update: (el, valueAccessor) => {
+				let card = ko.unwrap(valueAccessor());
+				console.log(card);
+				if(card) card.track($(el).addClass("card").attr("data-card", card.identityO()));
 			}
 		}
 

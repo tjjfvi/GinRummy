@@ -69,8 +69,7 @@ function handle(ws, type, ...data){
 				ws.o.s("fin");
 				break;
 			}
-			ws.s("start");
-			ws.o.s("start");
+
 			setup(...(ws.n ? [ws, ws.o] : [ws.o, ws]));
 			break;
 	}
@@ -95,12 +94,14 @@ function setup(ws1, ws2){
 	ws1.score |= 0;
 	ws2.score |= 0;
 
+	ws1.s("start");
 	ws1.s("n", ws1.n);
 	ws1.s("hand", h1);
 	ws1.s("discard", discard);
 	ws1.s("phase", game.phase);
 	ws1.s("initCard", initCard);
 
+	ws2.s("start");
 	ws2.s("n", ws2.n);
 	ws2.s("hand", h2);
 	ws2.s("discard", discard);
