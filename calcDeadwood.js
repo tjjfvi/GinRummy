@@ -23,14 +23,13 @@ function calcDeadwood(hand, playOff) {
 
 		let set = suits
 			.map(s => cur[0] + s)
-			.filter(c => ~todo.indexOf(c) || ~playOff.deadwood.indexOf(c))
+			.filter(c => ~todo.indexOf(c))
 			.concat(...playOff.melds.filter(m => m.every(c => c[0] === cur[0])));
 		let run = [cur];
 		[1, -1].forEach(d => {
 			let c = cur;
 			while(
 				~todo.indexOf(c = ranks[ranks.indexOf(c[0]) + d] + c[1]) ||
-				~playOff.deadwood.indexOf(c) ||
 				playOff.melds.some(m => m.every(c => c[1] === cur[1]) && ~m.indexOf(c))
 			)
 				run.push(c);
