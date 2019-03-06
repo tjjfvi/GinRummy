@@ -132,8 +132,6 @@ module.exports = class {
 
 				self.hand([]);
 				self.oHand([]);
-
-				console.log(self.melds());
 			}
 
 			if(type === "start") {
@@ -154,7 +152,6 @@ module.exports = class {
 					setTimeout(() => {
 						$("._card.old").remove();
 						pauseAnimation = false;
-						console.log("hi");
 						animate();
 					}, 400);
 				}, 0);
@@ -234,7 +231,6 @@ module.exports = class {
 		ko.bindingHandlers.card = {
 			update: (el, valueAccessor) => {
 				let card = ko.unwrap(valueAccessor());
-				console.log(card);
 				if(card) card.track($(el).addClass("card").attr("data-card", card.identityO()));
 			}
 		}
