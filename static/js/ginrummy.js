@@ -12,6 +12,7 @@ module.exports = class {
 
 		const cards = [];
 		let pauseAnimation = false;
+		let zIndex = 0;
 
 		const Card = createCard();
 
@@ -205,6 +206,7 @@ module.exports = class {
 					.attr("data-card", this.identity)
 					.offset(source.offset())
 					.append($("<div>").text("👁"))
+					.css("z-index", ++zIndex)
 					.appendTo(".ginrummy")
 				;
 			}
@@ -240,6 +242,7 @@ module.exports = class {
 
 			track($el){
 				this.$trackee = $el;
+				this.$tracker.css("z-index", ++zIndex);
 				return this;
 			}
 
