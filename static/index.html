@@ -78,7 +78,10 @@
 			</div>
 			<div data-bind="visible: phase() !== -1">
 				<div class="deck" data-bind="card: _deckCard(), css: { clickable: canDraw() }, click: drawDeck"></div>
-				<div class="discard" data-bind="card: discard(), css: { clickable: canDraw() }, click: drawDiscard"></div>
+				<div class="discard" data-bind="card: discard()[0], css: { clickable: canDraw() }, click: drawDiscard"></div>
+				<div class="discardTrail" data-bind="foreach: pad(discard.slice(1).filter(c => c),3)">
+					<div data-bind="card: $data"></div>
+				</div>
 			</div>
 			<div data-bind="foreach: hand, visible: phase() !== -1" class="hand">
 				<div data-bind="

@@ -22,7 +22,7 @@ module.exports = class {
 		self.oHand = ko.observableArray();
 		self.hand = ko.observableArray();
 		self.phase = ko.observable();
-		self.discard = ko.observable();
+		self.discard = ko.observableArray();
 		self.no = ko.observable();
 		self.willKnock = ko.observable(false);
 
@@ -60,15 +60,15 @@ module.exports = class {
 		self.drawDiscard = () => {
 			if(!self.canDraw()) return;
 			ws.s("move", "discard");
-			self.hand.push(self.discard());
-			self.no(self.discard());
-			self.discard(null);
+			self.hand.push(self.discard()[0]);
+			self.no(self.discard()[0]);
+			self.discard.splice(0, 1, null);
 		}
 
 		self.discardCard = card => {
 			if(!self.canDiscard() || card.identity === "?" || card === self.no()) return;
 			self.hand.remove(card);
-			self.discard(card);
+			self.discard.unshift(card);
 			ws.s("move", "discard", card.identity, self.willKnock());
 			self.willKnock(false);
 		}
@@ -82,6 +82,11 @@ module.exports = class {
 		self.sendOk = () => {
 			self.ok(true);
 			ws.s("move", "ok");
+		}
+
+		self.pad = (a, l) => {
+			a.splice(0, 0, ...[...Array((l - a.length%l)%l)].map(() => null));
+			return a
 		}
 
 		self.value = value;
@@ -103,9 +108,10 @@ module.exports = class {
 						self.oHand().find(c => c.identity === data[0]) ||
 						self.oHand().find(c => c.identity === "?")
 					).reveal(data[0]));
-				self.discard(data[0] === "?" ? null : Card.find(data[0]));
-				if(self.discard())
-					self.discard().public = true;
+				if(self.phase() !== self.n() + .5)
+					self.discard.unshift(data[0] === "?" ? null : Card.find(data[0]));
+				if(self.discard()[0])
+					self.discard()[0].public = true;
 			}
 			if(type === "drew") {
 				self.hand().find(c => c.identity === "?").reveal(data[0]);
@@ -113,8 +119,8 @@ module.exports = class {
 			} if(type === "o:deck")
 				self.oHand.push(new Card("?"));
 			if(type === "o:discard") {
-				self.oHand.push(self.discard())
-				self.discard(null)
+				self.oHand.push(self.discard()[0])
+				self.discard.splice(0, 1, null)
 			}
 
 			if(type === "end") {
@@ -222,6 +228,7 @@ module.exports = class {
 					.attr("data-card", this.identity)
 					.toggleClass("inHand", !!this.$trackee && !!this.$trackee.parents(".hand").length)
 					.toggleClass("inDeadwood", !!this.$trackee && !!this.$trackee.parents(".deadwood").length)
+					.toggleClass("inDiscardTrail", !!this.$trackee && !!this.$trackee.parents(".discardTrail").length)
 					.toggleClass("phantom", !!this.phantom)
 					.toggleClass("public", !!this.public)
 					.toggleClass("hide", this.identity === "?")
