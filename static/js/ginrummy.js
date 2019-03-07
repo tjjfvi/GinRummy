@@ -103,10 +103,8 @@ module.exports = class {
 					self.discard().public = true;
 			}
 			if(type === "drew") {
-				setTimeout(() => {
-					cardMap[$(".hand .card").eq(self.hand.indexOf("?")).attr("id")].change(data[0]);
-					self.hand.splice(-1, 1, Card.find(data[0]));
-				}, 1000);
+				self.hand().find(c => c.identity === "?").reveal(data[0]);
+				self.hand.splice(-1, 1, Card.find(data[0]));
 			} if(type === "o:deck")
 				self.oHand.push(new Card("?"));
 			if(type === "o:discard") {
