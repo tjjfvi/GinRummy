@@ -66,7 +66,7 @@
 				<div data-bind="card: $data"></div>
 			</div>
 			<div data-bind="visible: phase() !== -1">
-				<div class="deck" data-bind="card: _deckCard, css: { clickable: canDraw() }, click: drawDeck"></div>
+				<div class="deck" data-bind="card: _deckCard(), css: { clickable: canDraw() }, click: drawDeck"></div>
 				<div class="discard" data-bind="card: discard(), css: { clickable: canDraw() }, click: drawDiscard"></div>
 			</div>
 			<div data-bind="foreach: hand, visible: phase() !== -1" class="hand">

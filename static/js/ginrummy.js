@@ -15,7 +15,7 @@ module.exports = class {
 
 		const Card = createCard();
 
-		self._deckCard = new Card("?");
+		self._deckCard = ko.observable();
 
 		self.n = ko.observable();
 		self.oHand = ko.observableArray();
@@ -98,8 +98,9 @@ module.exports = class {
 						self.oHand().find(c => c.identity === data[0]) ||
 						self.oHand().find(c => c.identity === "?")
 					).reveal(data[0]));
-				self.discard(Card.find(data[0]));
-				self.discard().public = true;
+				self.discard(data[0] === "?" ? null : Card.find(data[0]));
+				if(self.discard())
+					self.discard().public = true;
 			}
 			if(type === "drew") {
 				setTimeout(() => {
@@ -140,6 +141,7 @@ module.exports = class {
 			if(type === "start") {
 				$("._card").addClass("old");
 				cards.map(c => c.old = true);
+				self._deckCard(new Card("?"));
 				self.oMelds([]);
 				self.melds([]);
 				self._deadwood([]);
@@ -150,6 +152,7 @@ module.exports = class {
 				self.oHand([...Array(10)].map(() => new Card("?")));
 				pauseAnimation = true;
 				setTimeout(() => {
+					console.log(self._deckCard().$trackee);
 					cards.splice(0, cards.length, ...cards.filter(c => !c.old));
 					$("._card.old").offset($(".deck").offset());
 					setTimeout(() => {
