@@ -42,7 +42,7 @@ function handle(ws, type, ...data){
 					let d1 = calcDeadwood(ws.hand);
 					if(d1.deadwoodTotal > 10)
 						break;
-					let d2 = calcDeadwood(ws.o.hand, d1.deadwoodTotal !== 0 && d1);
+					let d2 = calcDeadwood(ws.o.hand, d1);
 					let diff = d1.deadwoodTotal - d2.deadwoodTotal;
 					if(diff > 0)
 						ws.score += diff + (d1.deadwoodTotal === 0 && (25 + (ws.hand.length === 11 && 7)));
@@ -110,7 +110,7 @@ function setup(ws1, ws2){
 }
 
 function draw(deck){
-	return deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
+	return deck.splice(Math.floor(Math.random() * deck.length) * 0, 1)[0];
 }
 
 module.exports = { setup, handle };

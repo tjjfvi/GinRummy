@@ -28,11 +28,15 @@ module.exports = class {
 		self.score = ko.observable(0);
 		self.oScore = ko.observable(0);
 
-		self.deadwoodCalc = ko.computed(() => calcDeadwood(self.hand().map(c => c.identity)));
+		self.deadwoodCalc = ko.computed(() => {
+			let calc = calcDeadwood(self.hand().map(c => c.identity))
+			calc.deadwood = calc.deadwood.map(c => Card.find(c));
+			return calc;
+		});
 		self._deadwoodTotal = ko.observable();
 		self.deadwoodTotal = ko.computed(() => self._deadwoodTotal() || self.deadwoodCalc().deadwoodTotal);
 		self._deadwood = ko.observable();
-		self.deadwood = ko.computed(() => self.phase() === -1 && (self._deadwood() || self.deadwoodCalc().deadwood));
+		self.deadwood = ko.computed(() => self._deadwood() || self.deadwoodCalc().deadwood);
 
 		self.oDeadwoodTotal = ko.observable("???");
 		self.oDeadwood = ko.observable([]);
@@ -117,20 +121,26 @@ module.exports = class {
 				let [s1, s2] = data;
 				let s  = self.n() === 0 ? s1 : s2;
 				let oS = self.n() !== 0 ? s1 : s2;
-				self.score(s.score);
-				self._deadwood(s.deadwood);
-				self.melds(s.melds);
-				self._deadwoodTotal(s.deadwoodTotal);
-				self.oScore(oS.score);
-				self.oDeadwood(oS.deadwood);
-				self.oMelds(oS.melds);
-				self.oDeadwoodTotal(oS.deadwoodTotal);
+
+				let m = (a, b) => a.map(c => b.find(d => d.identity === c) || new Card(c, Card.find(c).$trackee, true));
+				let mm = (a, b) => a.map(c => m(c, b));
+
 				[].concat(...oS.melds, oS.deadwood).reduce((i, c) => {
-					if(~self.oHand().map(d => d.identity === c).indexOf(true))
+					if([].concat(self.oHand(),self.hand()).some(d => d.identity === c))
 						return i;
-					self.oHand().filter(c => c.identity === "?")[0].change(c);
+					console.log(self.oHand());
+					self.oHand().find(c => c.identity === "?").reveal(c);
 					return ++i;
 				}, 0);
+
+				self.score(s.score);
+				self._deadwood(m(s.deadwood, self.hand()));
+				self.melds(mm(s.melds, self.hand()));
+				self._deadwoodTotal(s.deadwoodTotal);
+				self.oScore(oS.score);
+				self.oDeadwood(m(oS.deadwood, self.oHand()));
+				self.oMelds(mm(oS.melds, self.oHand()));
+				self.oDeadwoodTotal(oS.deadwoodTotal);
 
 				self.hand([]);
 				self.oHand([]);
@@ -152,7 +162,7 @@ module.exports = class {
 				setTimeout(() => {
 					console.log(self._deckCard().$trackee);
 					cards.splice(0, cards.length, ...cards.filter(c => !c.old));
-					$("._card.old").offset($(".deck").offset());
+					$("._card.old").addClass("hide").offset($(".deck").offset());
 					setTimeout(() => {
 						$("._card.old").remove();
 						pauseAnimation = false;
@@ -183,15 +193,17 @@ module.exports = class {
 		}
 
 		function createCard(){ return class Card {
-			constructor(identity){
+			constructor(identity, source=$(".deck"), phantom){
 				cards.push(this);
+				this.public = false;
+				this.phantom = phantom;
 				this.identity = identity;
 				this.identityO = ko.observable(identity);
 				this.$trackee = null;
 				this.$tracker = $("<div>")
 					.addClass("_card hide")
 					.attr("data-card", this.identity)
-					.offset($(".deck").offset())
+					.offset(source.offset())
 					.append($("<div>").text("👁"))
 					.appendTo(".ginrummy")
 				;
@@ -207,6 +219,7 @@ module.exports = class {
 				this.$tracker
 					.attr("data-card", this.identity)
 					.toggleClass("inHand", !!this.$trackee && !!this.$trackee.parents(".hand").length)
+					.toggleClass("phantom", !!this.phantom)
 					.toggleClass("public", !!this.public)
 					.toggleClass("hide", this.identity === "?")
 					.css("opacity", hide ? 0 : "")

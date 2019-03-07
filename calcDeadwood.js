@@ -39,7 +39,7 @@ function calcDeadwood(hand, playOff) {
 			let newTodo = todo.slice();
 			let newDeadwood = deadwood.slice();
 
-			meld.map(c => newTodo.splice(newTodo.indexOf(c), 1));
+			meld.map(c => newTodo.splice(newTodo.indexOf(c), +!!~newTodo.indexOf(c)));
 
 			return { melds: [...melds, meld], todo: newTodo, deadwood: newDeadwood };
 		}));

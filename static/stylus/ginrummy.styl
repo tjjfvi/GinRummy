@@ -72,7 +72,7 @@
 	width 100%
 	flex-direction column
 	align-items center
-	justify-content: space-between;
+	justify-content: space-around;
 
 	& > div
 		display flex
@@ -106,6 +106,17 @@
 		&.ok
 			color $green
 			border-color $green
+
+	.sidebar
+		display inline-flex
+		flex-direction column
+		justify-content space-between
+		position absolute
+		height 100%
+		left 0
+
+	.phantom
+		opacity .5
 
 .clickable
 	cursor pointer

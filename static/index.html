@@ -45,9 +45,20 @@
 		</div>
 
 		<div class="ginrummy" data-bind="with: ginrummy, visible: status() === 'playing'">
-			<div class="stats">
-				Score: <span data-bind="text: oScore"></span>/100<br>
-				Deadwood: <span data-bind="text: oDeadwoodTotal"></span>
+			<div class="sidebar">
+				<div class="stats">
+					Score: <span data-bind="text: oScore"></span>/100<br>
+					Deadwood: <span data-bind="text: oDeadwoodTotal"></span>
+				</div>
+				<div style="align-self: flex-start; display: flex; align-items: center;">
+					<div class="stats">
+						Score: <span data-bind="text: score"></span>/100<br>
+						Deadwood: <span data-bind="text: deadwoodTotal"></span>
+					</div>
+					<!-- ko if: deadwoodCalc().canKnock && phase() === n() + .5 -->
+						<button data-bind="click: knock, css: { willKnock }">Knock</button>
+					<!-- /ko -->
+				</div>
 			</div>
 			<div class="melds" data-bind="visible: phase() === -1">
 				<!-- ko foreach: oMelds -->
@@ -59,7 +70,7 @@
 					</div>
 				<!-- /ko -->
 				<div class="deadwood" data-bind="visible: oDeadwoodTotal, foreach: oDeadwood">
-					<div data-bind="attr: { 'data-card': $data }"></div>
+					<div data-bind="card: $data"></div>
 				</div>
 			</div>
 			<div data-bind="foreach: oHand, visible: phase() !== -1" class="oHand">
@@ -93,15 +104,6 @@
 							css: { phantom: ~$parents[1].hand().indexOf($data) },
 						"></div>
 					</div>
-				<!-- /ko -->
-			</div>
-			<div style="align-self: flex-start; display: flex; align-items: center;">
-				<div class="stats">
-					Score: <span data-bind="text: score"></span>/100<br>
-					Deadwood: <span data-bind="text: deadwoodTotal"></span>
-				</div>
-				<!-- ko if: deadwoodCalc().canKnock && phase() === n() + .5 -->
-					<button data-bind="click: knock, css: { willKnock }">Knock</button>
 				<!-- /ko -->
 			</div>
 		</div>
