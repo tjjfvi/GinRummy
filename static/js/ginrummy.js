@@ -221,6 +221,7 @@ module.exports = class {
 				this.$tracker
 					.attr("data-card", this.identity)
 					.toggleClass("inHand", !!this.$trackee && !!this.$trackee.parents(".hand").length)
+					.toggleClass("inDeadwood", !!this.$trackee && !!this.$trackee.parents(".deadwood").length)
 					.toggleClass("phantom", !!this.phantom)
 					.toggleClass("public", !!this.public)
 					.toggleClass("hide", this.identity === "?")
