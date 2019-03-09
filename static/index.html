@@ -50,6 +50,7 @@
 					Score: <span data-bind="text: oScore"></span>/100<br>
 					Deadwood: <span data-bind="text: oDeadwoodTotal"></span>
 				</div>
+				<span class="stats" data-bind="visile: phase() !== -1, text: (Math.floor(phase()) === n() ? 'Your ' : 'Opponent\'s ') + (phase() % 1 ? 'discard' : 'draw')"></span>
 				<div style="align-self: flex-start; display: flex; align-items: center;">
 					<div class="stats">
 						Score: <span data-bind="text: score"></span>/100<br>
