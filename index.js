@@ -61,6 +61,8 @@ app.ws("/ws", ws => {
 
 	sendGames([ws]);
 
+	setInterval(() => ws.s("ping"), 1000);
+
 	ws.on("message", message => {
 		let type, data;
 		try { [type, ...data] = JSON.parse(message); } catch(e){}
