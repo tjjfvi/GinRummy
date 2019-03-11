@@ -13,10 +13,13 @@ module.exports = class {
 		const cards = [];
 		let pauseAnimation = false;
 		let zIndex = 0;
+		let mPos = {};
+		let clicking = false;
 
 		const Card = createCard();
 
 		self._deckCard = ko.observable();
+		self._deckBackgroundCard = ko.observable();
 
 		self.n = ko.observable();
 		self.oHand = ko.observableArray();
@@ -50,17 +53,18 @@ module.exports = class {
 
 		self.ok = ko.observable(false);
 
-		self.drawDeck = () => {
+		self.drawDeck = done => {
 			if(!self.canDraw()) return;
 			ws.s("move", "deck");
-			self.hand.push(new Card("?"));
+			if(!done) self.hand.push(self._deckCard());
+			self._deckCard(new Card("?"));
 			self.no(null);
 		}
 
-		self.drawDiscard = () => {
+		self.drawDiscard = done => {
 			if(!self.canDraw()) return;
 			ws.s("move", "discard");
-			self.hand.push(self.discard()[0]);
+			if(!done) self.hand.push(self.discard()[0]);
 			self.no(self.discard()[0]);
 			self.discard.splice(0, 1, null);
 		}
@@ -115,7 +119,6 @@ module.exports = class {
 			}
 			if(type === "drew") {
 				self.hand().find(c => c.identity === "?").reveal(data[0]);
-				self.hand.splice(-1, 1, Card.find(data[0]));
 			} if(type === "o:deck")
 				self.oHand.push(new Card("?"));
 			if(type === "o:discard") {
@@ -156,6 +159,7 @@ module.exports = class {
 			if(type === "start") {
 				$("._card").addClass("old");
 				cards.map(c => c.old = true);
+				self._deckBackgroundCard(new Card("?"));
 				self._deckCard(new Card("?"));
 				self.oMelds([]);
 				self.melds([]);
@@ -167,7 +171,6 @@ module.exports = class {
 				self.oHand([...Array(10)].map(() => new Card("?")));
 				pauseAnimation = true;
 				setTimeout(() => {
-					console.log(self._deckCard().$trackee);
 					cards.splice(0, cards.length, ...cards.filter(c => !c.old));
 					$("._card.old").addClass("hide").offset($(".deck").offset());
 					setTimeout(() => {
@@ -189,6 +192,14 @@ module.exports = class {
 			}
 		})
 
+		$("body").mousemove(e => {
+			mPos = {
+				left: e.originalEvent.pageX,
+				top:  e.originalEvent.pageY,
+			};
+			clicking = !!e.buttons
+		});
+
 		function animate(){
 			if(pauseAnimation) return;
 			cards.forEach(c => c.update());
@@ -200,7 +211,16 @@ module.exports = class {
 		}
 
 		function createCard(){ return class Card {
-			constructor(identity, source=$(".deck"), phantom){
+			constructor(identity="?", source=$(".deck"), phantom){
+				this.dragging = false;
+				this.clicking = false;
+				this.mOffset = {};
+				this.mPos = {};
+				this.was = null;
+				this.back = () => {};
+				this.lastGoal = 0;
+				this.lastClick = 0;
+
 				cards.push(this);
 				this.public = false;
 				this.phantom = phantom;
@@ -213,29 +233,115 @@ module.exports = class {
 					.offset(source.offset())
 					.append($("<div>").text("👁"))
 					.css("z-index", ++zIndex)
+					.mousedown(({ originalEvent: e }) => {
+						this.$tracker.css("z-index", ++zIndex)
+						this.clicking = true;
+						clicking = true;
+						this.mOffset = { top: e.layerY, left: e.layerX };
+						let i = self.hand.indexOf(this);
+						[this.was, this.back] =
+							 ~i ?
+								["hand", () => (self.hand.remove(this), self.hand.splice(i, 0, this))] :
+							self._deckCard() === this ?
+								["deck", () => this.$trackee = $(".deck")] :
+							self.discard()[0] === this ?
+								["discard", () => this.$trackee = $(".discard")] :
+							[null, () => {}]
+						;
+						return false;
+					})
+					.mousemove(({ originalEvent: e }) => {
+						if(!this.clicking || !this.$trackee || !(
+							this.$trackee.parents(".hand").length ||
+							self.phase() === self.n() && this.$trackee.is(".deck, .discard")
+						))
+							return;
+						this.dragging = true;
+					})
+					.mouseup(this.mouseup = () => {
+						let d = this.dragging;
+						this.clicking = false;
+						this.dragging = false;
+						if(!this.$trackee)
+							return
+						if(!d) {
+							if(Date.now() - this.lastClick < 500)
+								this.$trackee.click();
+							this.lastClick = Date.now();
+							return
+						}
+						let goal = this.goal(true);
+						if(goal && goal.is(".discard"))
+							self.discardCard(this);
+						else if(!~self.hand.indexOf(this))
+							this.back();
+
+						if(~self.hand().indexOf(this) && this.was !== "hand")
+							self[self._deckCard() === this ? "drawDeck" : "drawDiscard"](true);
+					})
 					.appendTo(".ginrummy")
 				;
+			}
+
+			goal(force){
+				if(!this.dragging && !force)
+					return;
+
+				let insideHand = inside($(".hand"));
+
+				if(!insideHand)
+					self.hand.remove(this);
+
+				if(inside($(".discard")) && self.phase() === self.n() + .5 && this.oldInd !== -1 && this !== self.no())
+					return $(".discard");
+
+				if(!insideHand)
+					return;
+
+				let i = $(".hand .card")
+					.filter((_, el) => mPos.left < el.getBoundingClientRect().right)
+					.first()
+					.index();
+				self.hand.remove(this);
+				self.hand.splice(i, 0, this);
+
+				function inside($el){
+					let { top, left, right, bottom } = $el[0].getBoundingClientRect();
+					return mPos.left >= left && mPos.left <= right && mPos.top >= top && mPos.top <= bottom;
+				}
 			}
 
 			update(){
 				let ease = n => (3*n**2 + 2*n**3)/5;
 
 				let offset = (this.$trackee || { offset: () => {} }).offset() || { left: 0, top: 0 };
+				let goal = this.goal();
 
-				let hide = offset.left === 0 && offset.top === 0;
+				if(goal) this.lastGoal = Date.now();
+
+				let hide = offset.left === 0 && offset.top === 0 && !this.dragging;
 
 				this.$tracker
 					.attr("data-card", this.identity)
+					.toggleClass("transition", !this.dragging || Date.now() - this.lastGoal <= 200)
 					.toggleClass("inHand", !!this.$trackee && !!this.$trackee.parents(".hand").length)
 					.toggleClass("inDeadwood", !!this.$trackee && !!this.$trackee.parents(".deadwood").length)
 					.toggleClass("inDiscardTrail", !!this.$trackee && !!this.$trackee.parents(".discardTrail").length)
+					.toggleClass("clickable", !!this.$trackee && !!this.$trackee.is(".clickable"))
 					.toggleClass("phantom", !!this.phantom)
 					.toggleClass("public", !!this.public)
 					.toggleClass("hide", this.identity === "?")
 					.css("opacity", hide ? 0 : "")
+					.css("pointer-events", hide ? "none" : "auto")
 
 				if(!hide)
-					this.$tracker.offset(offset);
+					this.$tracker.offset(goal ? goal.offset() : this.dragging ? {
+						left: mPos.left - this.mOffset.left,
+						top:  mPos.top  - this.mOffset.top,
+					} : offset);
+
+				if(this.clicking && !clicking)
+					this.mouseup();
 			}
 
 			reveal(identity){

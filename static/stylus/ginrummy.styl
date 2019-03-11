@@ -13,7 +13,12 @@
 	margin 5px;
 	position relative
 
-	transition: all 0s ease-in-out .1s, transform .2s ease-in-out, top .2s, left .2s, width .2s, height .2s, border-width .2s, border-radius .2s, margin .2s;
+	$transition = all 0s ease-in-out .1s, transform .2s ease-in-out, width .2s, height .2s, border-width .2s, border-radius .2s, margin .2s;
+
+	transition $transition, top 0s, left 0s
+
+	&.transition
+		transition $transition, top .2s, left .2s
 
 	&:before
 		content attr(data-card)
@@ -33,9 +38,9 @@
 		border-color red
 
 	&[data-card="?"], &.hide
-		color $grey
-		border-color $grey
-		opacity .5
+		background-color mix($white, $black)
+		color mix($grey, $black)
+		border-color mix($grey, $black)
 		transform: rotateY(180deg);
 
 		&:before
@@ -82,7 +87,6 @@
 
 ._card
 	position absolute
-	pointer-events none
 
 .ginrummy
 	display flex

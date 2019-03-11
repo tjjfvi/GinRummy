@@ -31,7 +31,7 @@ require("jquery")($ => {
 
 				ws.addEventListener("message", ({ data: message }) => {
 					let [type, ...data] = JSON.parse(message);
-					console.log(type, ...data);
+					// console.log(type, ...data);
 					self.emit("ws", { type, data });
 
 					switch(type) {
