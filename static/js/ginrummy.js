@@ -1,10 +1,13 @@
 
 const animationDuration = 1000;
 const { calcDeadwood, value } = require("../../calcDeadwood");
+const { cards } = require("../../cards");
 
 module.exports = class {
 
 	constructor(root){
+		this.fetchCards();
+
 		const { ko, $ } = root.globals;
 		const { ws } = root;
 		const self = this;
@@ -206,10 +209,6 @@ module.exports = class {
 			window.requestAnimationFrame(animate);
 		}
 
-		function genId(){
-			return "card-" + require("crypto").randomBytes(4).toString("hex");
-		}
-
 		function createCard(){ return class Card {
 			constructor(identity="?", source=$(".deck"), phantom){
 				this.dragging = false;
@@ -231,6 +230,8 @@ module.exports = class {
 					.addClass("_card hide")
 					.attr("data-card", this.identity)
 					.offset(source.offset())
+					.append($("<img>").addClass("front").attr("src", this.image))
+					.append($("<img>").addClass("back").attr("src", this.backImage))
 					.append($("<div>").text("👁"))
 					.css("z-index", ++zIndex)
 					.mousedown(({ originalEvent: e }) => {
@@ -283,6 +284,14 @@ module.exports = class {
 				;
 			}
 
+			get image() {
+				return self.cards[this.identity];
+			}
+
+			get backImage(){
+				return self.cards["-"];
+			}
+
 			goal(force){
 				if(!this.dragging && !force)
 					return;
@@ -333,6 +342,8 @@ module.exports = class {
 					.toggleClass("hide", this.identity === "?")
 					.css("opacity", hide ? 0 : "")
 					.css("pointer-events", hide ? "none" : "auto")
+					.children(".front").attr("src", this.image)
+					.children(".back").attr("src", this.backImage)
 
 				if(!hide)
 					this.$tracker.offset(goal ? goal.offset() : this.dragging ? {
@@ -369,11 +380,21 @@ module.exports = class {
 			init: el => $(el).addClass("card"),
 			update: (el, valueAccessor) => {
 				let card = ko.unwrap(valueAccessor());
-				if(card) card.track($(el).attr("data-card", card.identityO()));
+				if(card) card.track($(el));
 			}
 		}
 
 		window.requestAnimationFrame(animate);
+	}
+
+	fetchCards(){
+		this.cards = {};
+		Promise.all(cards.concat(["-"]).map(async c => ({
+			[c]: await fetch(`/cards/${c}.svg`)
+				.then(r => r.blob())
+				.then(b => URL.createObjectURL(b))
+			,
+		}))).then(cs => this.cards = Object.assign({}, ...cs));
 	}
 
 }

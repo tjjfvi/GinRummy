@@ -83,7 +83,7 @@
 					<div class="deck" data-bind="card: _deckCard, css: { clickable: canDraw() }, click: () => drawDeck()"></div>
 				</div>
 				<div class="discard" data-bind="card: discard()[0], css: { clickable: canDraw() }, click: () => drawDiscard()"></div>
-				<div class="discardTrail" data-bind="foreach: pad(discard.slice(1).filter(c => c),3)">
+				<div class="discardTrail" data-bind="foreach: pad(discard.slice(1).filter(c => c),2)">
 					<div data-bind="card: $data"></div>
 				</div>
 			</div>
