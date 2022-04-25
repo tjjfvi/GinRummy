@@ -12,13 +12,10 @@
 <g id="Indices">
 	<text x="-55" y="-95" fill="#ff0000" font-family="'Roboto'" font-size="36px">2</text>
 	<text x="-55" y="-65" stroke="#ff0000" stroke-width="1px" fill="#ff0000" font-family="'Consolas'" font-size="36px">♦</text>
-	<text x="+55" y="-95" fill="#ff0000" font-family="'Roboto'" font-size="36px">2</text>
-	<text x="+55" y="-65" stroke="#ff0000" stroke-width="1px" fill="#ff0000" font-family="'Consolas'" font-size="36px">♦</text>
 
 	<text transform="rotate(180)" x="-55" y="-95" fill="#ff0000" font-family="'Roboto'" font-size="36px">2</text>
 	<text transform="rotate(180)" x="-55" y="-65" stroke="#ff0000" stroke-width="1px" fill="#ff0000" font-family="'Consolas'" font-size="36px">♦</text>
-	<text transform="rotate(180)" x="+55" y="-95" fill="#ff0000" font-family="'Roboto'" font-size="36px">2</text>
-	<text transform="rotate(180)" x="+55" y="-65" stroke="#ff0000" stroke-width="1px" fill="#ff0000" font-family="'Consolas'" font-size="36px">♦</text>
+
 </g>
 <g id="Suit">
 	<text text-anchor="middle" dominant-baseline="middle" x="0" y="7.5" stroke-linejoin="round" stroke="#ff0000" fill="#ff0000" stroke-width="5" stroke-miterlimit="10" font-family="'Consolas'" font-size="100px">♦</text>
